@@ -1,46 +1,44 @@
 <template>
-  <layout :title="`${form.fields.first_name} ${form.fields.last_name}`">
+  <div>
     <h1 class="mb-8 font-bold text-3xl">
-      <inertia-link class="text-indigo-light hover:text-indigo-dark" :href="route('contacts')">Contacts</inertia-link>
-      <span class="text-indigo-light font-medium">/</span>
-      {{ form.fields.first_name }} {{ form.fields.last_name }}
+      <inertia-link class="text-indigo-400 hover:text-indigo-600" :href="route('contacts')">Contacts</inertia-link>
+      <span class="text-indigo-400 font-medium">/</span>
+      {{ form.first_name }} {{ form.last_name }}
     </h1>
     <trashed-message v-if="contact.deleted_at" class="mb-6" @restore="restore">
       This contact has been deleted.
     </trashed-message>
-    <div class="bg-white rounded shadow overflow-hidden max-w-lg">
+    <div class="bg-white rounded shadow overflow-hidden max-w-3xl">
       <form @submit.prevent="submit">
         <div class="p-8 -mr-6 -mb-8 flex flex-wrap">
-          <text-input v-model="form.fields.first_name" class="pr-6 pb-8 w-full lg:w-1/2" :error="form.errors.first('first_name')" label="First name" />
-          <text-input v-model="form.fields.last_name" class="pr-6 pb-8 w-full lg:w-1/2" :error="form.errors.first('last_name')" label="Last name" />
-          <select-input v-model="form.fields.organization_id" class="pr-6 pb-8 w-full lg:w-1/2" :error="form.errors.first('organization_id')" label="Organization">
+          <text-input v-model="form.first_name" :errors="$page.errors.first_name" class="pr-6 pb-8 w-full lg:w-1/2" label="First name" />
+          <text-input v-model="form.last_name" :errors="$page.errors.last_name" class="pr-6 pb-8 w-full lg:w-1/2" label="Last name" />
+          <select-input v-model="form.organization_id" :errors="$page.errors.organization_id" class="pr-6 pb-8 w-full lg:w-1/2" label="Organization">
             <option :value="null" />
             <option v-for="organization in organizations" :key="organization.id" :value="organization.id">{{ organization.name }}</option>
           </select-input>
-          <text-input v-model="form.fields.email" class="pr-6 pb-8 w-full lg:w-1/2" :error="form.errors.first('email')" label="Email" />
-          <text-input v-model="form.fields.phone" class="pr-6 pb-8 w-full lg:w-1/2" :error="form.errors.first('phone')" label="Phone" />
-          <text-input v-model="form.fields.address" class="pr-6 pb-8 w-full lg:w-1/2" :error="form.errors.first('address')" label="Address" />
-          <text-input v-model="form.fields.city" class="pr-6 pb-8 w-full lg:w-1/2" :error="form.errors.first('city')" label="City" />
-          <text-input v-model="form.fields.region" class="pr-6 pb-8 w-full lg:w-1/2" :error="form.errors.first('region')" label="Province/State" />
-          <select-input v-model="form.fields.country" class="pr-6 pb-8 w-full lg:w-1/2" :error="form.errors.first('country')" label="Country">
+          <text-input v-model="form.email" :errors="$page.errors.email" class="pr-6 pb-8 w-full lg:w-1/2" label="Email" />
+          <text-input v-model="form.phone" :errors="$page.errors.phone" class="pr-6 pb-8 w-full lg:w-1/2" label="Phone" />
+          <text-input v-model="form.address" :errors="$page.errors.address" class="pr-6 pb-8 w-full lg:w-1/2" label="Address" />
+          <text-input v-model="form.city" :errors="$page.errors.city" class="pr-6 pb-8 w-full lg:w-1/2" label="City" />
+          <text-input v-model="form.region" :errors="$page.errors.region" class="pr-6 pb-8 w-full lg:w-1/2" label="Province/State" />
+          <select-input v-model="form.country" :errors="$page.errors.country" class="pr-6 pb-8 w-full lg:w-1/2" label="Country">
             <option :value="null" />
             <option value="CA">Canada</option>
             <option value="US">United States</option>
           </select-input>
-          <text-input v-model="form.fields.postal_code" class="pr-6 pb-8 w-full lg:w-1/2" :error="form.errors.first('postal_code')" label="Postal code" />
+          <text-input v-model="form.postal_code" :errors="$page.errors.postal_code" class="pr-6 pb-8 w-full lg:w-1/2" label="Postal code" />
         </div>
-        <div class="px-8 py-4 bg-grey-lightest border-t border-grey-lighter flex items-center">
-          <button v-if="!contact.deleted_at" class="text-red hover:underline" tabindex="-1" type="button" @click="destroy">Delete Contact</button>
-          <loading-button :loading="form.sending" class="btn-indigo ml-auto" type="submit">Update Contact</loading-button>
+        <div class="px-8 py-4 bg-gray-100 border-t border-gray-200 flex items-center">
+          <button v-if="!contact.deleted_at" class="text-red-600 hover:underline" tabindex="-1" type="button" @click="destroy">Delete Contact</button>
+          <loading-button :loading="sending" class="btn-indigo ml-auto" type="submit">Update Contact</loading-button>
         </div>
       </form>
     </div>
-  </layout>
+  </div>
 </template>
 
 <script>
-import { Inertia, InertiaLink } from 'inertia-vue'
-import Form from '@/Utils/Form'
 import Layout from '@/Shared/Layout'
 import LoadingButton from '@/Shared/LoadingButton'
 import SelectInput from '@/Shared/SelectInput'
@@ -48,9 +46,13 @@ import TextInput from '@/Shared/TextInput'
 import TrashedMessage from '@/Shared/TrashedMessage'
 
 export default {
+  metaInfo() {
+    return {
+      title: `${this.form.first_name} ${this.form.last_name}`,
+    }
+  },
+  layout: Layout,
   components: {
-    InertiaLink,
-    Layout,
     LoadingButton,
     SelectInput,
     TextInput,
@@ -60,9 +62,11 @@ export default {
     contact: Object,
     organizations: Array,
   },
+  remember: 'form',
   data() {
     return {
-      form: new Form({
+      sending: false,
+      form: {
         first_name: this.contact.first_name,
         last_name: this.contact.last_name,
         organization_id: this.contact.organization_id,
@@ -73,30 +77,23 @@ export default {
         region: this.contact.region,
         country: this.contact.country,
         postal_code: this.contact.postal_code,
-      }),
+      },
     }
   },
   methods: {
     submit() {
-      this.form.put({
-        url: this.route('contacts.update', this.contact.id).url(),
-        then: () => Inertia.visit(this.route('contacts')),
-      })
+      this.sending = true
+      this.$inertia.put(this.route('contacts.update', this.contact.id), this.form)
+        .then(() => this.sending = false)
     },
     destroy() {
       if (confirm('Are you sure you want to delete this contact?')) {
-        this.form.delete({
-          url: this.route('contacts.destroy', this.contact.id).url(),
-          then: () => Inertia.replace(this.route('contacts.edit', this.contact.id).url()),
-        })
+        this.$inertia.delete(this.route('contacts.destroy', this.contact.id))
       }
     },
     restore() {
       if (confirm('Are you sure you want to restore this contact?')) {
-        this.form.put({
-          url: this.route('contacts.restore', this.contact.id).url(),
-          then: () => Inertia.replace(this.route('contacts.edit', this.contact.id).url()),
-        })
+        this.$inertia.put(this.route('contacts.restore', this.contact.id))
       }
     },
   },

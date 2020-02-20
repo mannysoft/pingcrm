@@ -2,16 +2,16 @@
 
 namespace App\Providers;
 
-use Debugbar;
 use Inertia\Inertia;
-use OpenPsa\Ranger\Ranger;
+use League\Glide\Server;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\UrlWindow;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -24,25 +24,57 @@ class AppServiceProvider extends ServiceProvider
 
     public function register()
     {
-        Inertia::share('app.name', Config::get('app.name'));
-        Inertia::share('auth.user', function () {
-            if (Auth::user()) {
-                return [
-                    'id' => Auth::user()->id,
-                    'first_name' => Auth::user()->first_name,
-                    'last_name' => Auth::user()->last_name,
-                    'email' => Auth::user()->email,
-                    'role' => Auth::user()->role,
-                    'account' => [
-                        'id' => Auth::user()->account->id,
-                        'name' => Auth::user()->account->name,
-                    ],
-                ];
-            }
+        $this->registerInertia();
+        $this->registerGlide();
+        $this->registerLengthAwarePaginator();
+    }
+
+    public function registerInertia()
+    {
+        Inertia::version(function () {
+            return md5_file(public_path('mix-manifest.json'));
         });
 
-        $this->registerLengthAwarePaginator();
-        $this->registerCarbonMarcos();
+        Inertia::share([
+            'auth' => function () {
+                return [
+                    'user' => Auth::user() ? [
+                        'id' => Auth::user()->id,
+                        'first_name' => Auth::user()->first_name,
+                        'last_name' => Auth::user()->last_name,
+                        'email' => Auth::user()->email,
+                        'role' => Auth::user()->role,
+                        'account' => [
+                            'id' => Auth::user()->account->id,
+                            'name' => Auth::user()->account->name,
+                        ],
+                    ] : null,
+                ];
+            },
+            'flash' => function () {
+                return [
+                    'success' => Session::get('success'),
+                    'error' => Session::get('error'),
+                ];
+            },
+            'errors' => function () {
+                return Session::get('errors')
+                    ? Session::get('errors')->getBag('default')->getMessages()
+                    : (object) [];
+            },
+        ]);
+    }
+
+    protected function registerGlide()
+    {
+        $this->app->bind(Server::class, function ($app) {
+            return Server::create([
+                'source' => Storage::getDriver(),
+                'cache' => Storage::getDriver(),
+                'cache_folder' => '.glide-cache',
+                'base_url' => 'img',
+            ]);
+        });
     }
 
     protected function registerLengthAwarePaginator()
@@ -114,16 +146,6 @@ class AppServiceProvider extends ServiceProvider
                     ]);
                 }
             };
-        });
-    }
-
-    protected function registerCarbonMarcos()
-    {
-        CarbonImmutable::macro('range', function ($to) {
-            return (new Ranger('en'))->format(
-                $this->toDateString(),
-                $to->toDateString()
-            );
         });
     }
 }

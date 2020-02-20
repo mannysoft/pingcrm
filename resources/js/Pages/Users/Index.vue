@@ -1,15 +1,15 @@
 <template>
-  <layout title="Users">
+  <div>
     <h1 class="mb-8 font-bold text-3xl">Users</h1>
     <div class="mb-6 flex justify-between items-center">
-      <search-filter v-model="form.search" class="w-full max-w-sm mr-4" @reset="reset">
-        <label class="block text-grey-darkest">Role:</label>
+      <search-filter v-model="form.search" class="w-full max-w-md mr-4" @reset="reset">
+        <label class="block text-gray-700">Role:</label>
         <select v-model="form.role" class="mt-1 w-full form-select">
           <option :value="null" />
           <option value="user">User</option>
           <option value="owner">Owner</option>
         </select>
-        <label class="mt-4 block text-grey-darkest">Trashed:</label>
+        <label class="mt-4 block text-gray-700">Trashed:</label>
         <select v-model="form.trashed" class="mt-1 w-full form-select">
           <option :value="null" />
           <option value="with">With Trashed</option>
@@ -28,11 +28,12 @@
           <th class="px-6 pt-6 pb-4">Email</th>
           <th class="px-6 pt-6 pb-4" colspan="2">Role</th>
         </tr>
-        <tr v-for="user in users" :key="user.id" class="hover:bg-grey-lightest focus-within:bg-grey-lightest">
+        <tr v-for="user in users" :key="user.id" class="hover:bg-gray-100 focus-within:bg-gray-100">
           <td class="border-t">
-            <inertia-link class="px-6 py-4 flex items-center focus:text-indigo" :href="route('users.edit', user.id)">
+            <inertia-link class="px-6 py-4 flex items-center focus:text-indigo-500" :href="route('users.edit', user.id)">
+              <img v-if="user.photo" class="block w-5 h-5 rounded-full mr-2 -my-2" :src="user.photo">
               {{ user.name }}
-              <icon v-if="user.deleted_at" name="trash" class="flex-no-shrink w-3 h-3 fill-grey ml-2" />
+              <icon v-if="user.deleted_at" name="trash" class="flex-shrink-0 w-3 h-3 fill-gray-400 ml-2" />
             </inertia-link>
           </td>
           <td class="border-t">
@@ -47,7 +48,7 @@
           </td>
           <td class="border-t w-px">
             <inertia-link class="px-4 flex items-center" :href="route('users.edit', user.id)" tabindex="-1">
-              <icon name="cheveron-right" class="block w-6 h-6 fill-grey" />
+              <icon name="cheveron-right" class="block w-6 h-6 fill-gray-400" />
             </inertia-link>
           </td>
         </tr>
@@ -56,21 +57,22 @@
         </tr>
       </table>
     </div>
-  </layout>
+  </div>
 </template>
 
 <script>
-import _ from 'lodash'
-import { Inertia, InertiaLink } from 'inertia-vue'
 import Icon from '@/Shared/Icon'
 import Layout from '@/Shared/Layout'
+import mapValues from 'lodash/mapValues'
+import pickBy from 'lodash/pickBy'
 import SearchFilter from '@/Shared/SearchFilter'
+import throttle from 'lodash/throttle'
 
 export default {
+  metaInfo: { title: 'Users' },
+  layout: Layout,
   components: {
-    InertiaLink,
     Icon,
-    Layout,
     SearchFilter,
   },
   props: {
@@ -88,16 +90,16 @@ export default {
   },
   watch: {
     form: {
-      handler: _.throttle(function() {
-        let query = _.pickBy(this.form)
-        Inertia.replace(this.route('users', Object.keys(query).length ? query : { remember: 'forget' }).url())
+      handler: throttle(function() {
+        let query = pickBy(this.form)
+        this.$inertia.replace(this.route('users', Object.keys(query).length ? query : { remember: 'forget' }))
       }, 150),
       deep: true,
     },
   },
   methods: {
     reset() {
-      this.form = _.mapValues(this.form, () => null)
+      this.form = mapValues(this.form, () => null)
     },
   },
 }

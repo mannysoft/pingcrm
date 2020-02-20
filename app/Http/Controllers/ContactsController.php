@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class ContactsController extends Controller
 {
@@ -46,7 +47,7 @@ class ContactsController extends Controller
 
     public function store()
     {
-        return Auth::user()->account->contacts()->create(
+        Auth::user()->account->contacts()->create(
             Request::validate([
                 'first_name' => ['required', 'max:50'],
                 'last_name' => ['required', 'max:50'],
@@ -61,7 +62,9 @@ class ContactsController extends Controller
                 'country' => ['nullable', 'max:2'],
                 'postal_code' => ['nullable', 'max:25'],
             ])
-        )->only('id');
+        );
+
+        return Redirect::route('contacts')->with('success', 'Contact created.');
     }
 
     public function edit(Contact $contact)
@@ -107,15 +110,21 @@ class ContactsController extends Controller
                 'postal_code' => ['nullable', 'max:25'],
             ])
         );
+
+        return Redirect::back()->with('success', 'Contact updated.');
     }
 
     public function destroy(Contact $contact)
     {
         $contact->delete();
+
+        return Redirect::back()->with('success', 'Contact deleted.');
     }
 
     public function restore(Contact $contact)
     {
         $contact->restore();
+
+        return Redirect::back()->with('success', 'Contact restored.');
     }
 }

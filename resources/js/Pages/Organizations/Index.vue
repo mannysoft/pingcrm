@@ -1,9 +1,9 @@
 <template>
-  <layout title="Organizations">
+  <div>
     <h1 class="mb-8 font-bold text-3xl">Organizations</h1>
     <div class="mb-6 flex justify-between items-center">
-      <search-filter v-model="form.search" class="w-full max-w-sm mr-4" @reset="reset">
-        <label class="block text-grey-darkest">Trashed:</label>
+      <search-filter v-model="form.search" class="w-full max-w-md mr-4" @reset="reset">
+        <label class="block text-gray-700">Trashed:</label>
         <select v-model="form.trashed" class="mt-1 w-full form-select">
           <option :value="null" />
           <option value="with">With Trashed</option>
@@ -22,11 +22,11 @@
           <th class="px-6 pt-6 pb-4">City</th>
           <th class="px-6 pt-6 pb-4" colspan="2">Phone</th>
         </tr>
-        <tr v-for="organization in organizations.data" :key="organization.id" class="hover:bg-grey-lightest focus-within:bg-grey-lightest">
+        <tr v-for="organization in organizations.data" :key="organization.id" class="hover:bg-gray-100 focus-within:bg-gray-100">
           <td class="border-t">
-            <inertia-link class="px-6 py-4 flex items-center focus:text-indigo" :href="route('organizations.edit', organization.id)">
+            <inertia-link class="px-6 py-4 flex items-center focus:text-indigo-500" :href="route('organizations.edit', organization.id)">
               {{ organization.name }}
-              <icon v-if="organization.deleted_at" name="trash" class="flex-no-shrink w-3 h-3 fill-grey ml-2" />
+              <icon v-if="organization.deleted_at" name="trash" class="flex-shrink-0 w-3 h-3 fill-gray-400 ml-2" />
             </inertia-link>
           </td>
           <td class="border-t">
@@ -41,7 +41,7 @@
           </td>
           <td class="border-t w-px">
             <inertia-link class="px-4 flex items-center" :href="route('organizations.edit', organization.id)" tabindex="-1">
-              <icon name="cheveron-right" class="block w-6 h-6 fill-grey" />
+              <icon name="cheveron-right" class="block w-6 h-6 fill-gray-400" />
             </inertia-link>
           </td>
         </tr>
@@ -51,22 +51,23 @@
       </table>
     </div>
     <pagination :links="organizations.links" />
-  </layout>
+  </div>
 </template>
 
 <script>
-import _ from 'lodash'
-import { Inertia, InertiaLink } from 'inertia-vue'
 import Icon from '@/Shared/Icon'
 import Layout from '@/Shared/Layout'
+import mapValues from 'lodash/mapValues'
 import Pagination from '@/Shared/Pagination'
+import pickBy from 'lodash/pickBy'
 import SearchFilter from '@/Shared/SearchFilter'
+import throttle from 'lodash/throttle'
 
 export default {
+  metaInfo: { title: 'Organizations' },
+  layout: Layout,
   components: {
-    InertiaLink,
     Icon,
-    Layout,
     Pagination,
     SearchFilter,
   },
@@ -84,16 +85,16 @@ export default {
   },
   watch: {
     form: {
-      handler: _.throttle(function() {
-        let query = _.pickBy(this.form)
-        Inertia.replace(this.route('organizations', Object.keys(query).length ? query : { remember: 'forget' }).url())
+      handler: throttle(function() {
+        let query = pickBy(this.form)
+        this.$inertia.replace(this.route('organizations', Object.keys(query).length ? query : { remember: 'forget' }))
       }, 150),
       deep: true,
     },
   },
   methods: {
     reset() {
-      this.form = _.mapValues(this.form, () => null)
+      this.form = mapValues(this.form, () => null)
     },
   },
 }

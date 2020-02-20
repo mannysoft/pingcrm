@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use App\Organization;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class OrganizationsController extends Controller
 {
@@ -28,7 +29,7 @@ class OrganizationsController extends Controller
 
     public function store()
     {
-        return Auth::user()->account->organizations()->create(
+        Auth::user()->account->organizations()->create(
             Request::validate([
                 'name' => ['required', 'max:100'],
                 'email' => ['nullable', 'max:50', 'email'],
@@ -39,7 +40,9 @@ class OrganizationsController extends Controller
                 'country' => ['nullable', 'max:2'],
                 'postal_code' => ['nullable', 'max:25'],
             ])
-        )->only('id');
+        );
+
+        return Redirect::route('organizations')->with('success', 'Organization created.');
     }
 
     public function edit(Organization $organization)
@@ -75,15 +78,21 @@ class OrganizationsController extends Controller
                 'postal_code' => ['nullable', 'max:25'],
             ])
         );
+
+        return Redirect::back()->with('success', 'Organization updated.');
     }
 
     public function destroy(Organization $organization)
     {
         $organization->delete();
+
+        return Redirect::back()->with('success', 'Organization deleted.');
     }
 
     public function restore(Organization $organization)
     {
         $organization->restore();
+
+        return Redirect::back()->with('success', 'Organization restored.');
     }
 }
